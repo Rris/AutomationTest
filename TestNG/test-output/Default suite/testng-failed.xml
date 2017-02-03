@@ -5,7 +5,7 @@
     <classes>
       <class name="com.fsoft.selenium.testng.AppTest">
         <methods>
-          <include name="excuseKeyword"/>
+          <include name="excuseKeyword" invocation-numbers="10"/>
         </methods>
       </class> <!-- com.fsoft.selenium.testng.AppTest -->
     </classes>

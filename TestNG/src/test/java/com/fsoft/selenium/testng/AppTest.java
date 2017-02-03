@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -22,8 +23,6 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -34,7 +33,7 @@ import junit.framework.TestCase;
  */
 public class AppTest extends TestCase {
     private static WebDriver webDriver;
-    final static int MAX = 100;
+    final static int MAX = 50;
     final static Logger logger = Logger.getLogger(App.class);
 
     public void setupBrowser(String inputValue) {
@@ -64,31 +63,30 @@ public class AppTest extends TestCase {
 
     public WebElement findElement(String locatorId, String locatorString) {
         WebElement webElement = null;
-        WebDriverWait wait = new WebDriverWait(webDriver, 10);
         switch (locatorId) {
         case "id":
-            webElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id(locatorString)));
+            webElement = webDriver.findElement(By.id(locatorString));
             break;
         case "name":
-            webElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name(locatorString)));
+            webElement = webDriver.findElement(By.name(locatorString));
             break;
         case "className":
-            webElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.className(locatorString)));
+            webElement = webDriver.findElement(By.className(locatorString));
             break;
         case "cssSelector":
-            webElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(locatorString)));
+            webElement = webDriver.findElement(By.cssSelector(locatorString));
             break;
         case "linkText":
-            webElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.linkText(locatorString)));
+            webElement = webDriver.findElement(By.linkText(locatorString));
             break;
         case "partialLinkText":
-            webElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText(locatorString)));
+            webElement = webDriver.findElement(By.partialLinkText(locatorString));
             break;
         case "tagName":
-            webElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName(locatorString)));
+            webElement = webDriver.findElement(By.tagName(locatorString));
             break;
         case "xpath":
-            webElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(locatorString)));
+            webElement = webDriver.findElement(By.xpath(locatorString));
             break;
         default:
             break;
@@ -105,12 +103,12 @@ public class AppTest extends TestCase {
     }
 
     public void dragAndDrop(String locatorId, String locatorString, String inputValue) {
-        WebElement webElement1 = findElement(locatorId, locatorString);
-        WebElement webElement2 = findElement(locatorId, inputValue);
-        (new Actions(webDriver)).dragAndDrop(webElement1, webElement2).perform();
+        WebElement fromWebElement1 = findElement(locatorId, locatorString);
+        WebElement toWebElement2 = findElement(locatorId, inputValue);
+        (new Actions(webDriver)).dragAndDrop(fromWebElement1, toWebElement2).perform();
     }
 
-    public static void screenShot(String inputValue) {
+    public void screenShot(String inputValue) {
         File scrFile = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.FILE);
         try {
             FileUtils.copyFile(scrFile, new File("/SelScripts/TestAuto_Framework/screenshots/" + inputValue + ".png"));
@@ -119,9 +117,30 @@ public class AppTest extends TestCase {
         }
     }
 
+    public void waitTime(String inputValue) {
+        int waitTime = Integer.parseInt(inputValue);
+        webDriver.manage().timeouts().implicitlyWait(waitTime, TimeUnit.SECONDS);
+    }
+
+    public void startLoop(int loopTimes, int fromLine, int toLine) {
+        String[][] storeData = (String[][]) prepareData();
+        for (int i = 0; i < loopTimes; i++) {
+            for (int j = fromLine - 2; j < toLine - 2; j++) {
+                excuseKeyword(storeData[j]);
+            }
+        }
+    }
+
     @Test(dataProvider = "data")
-    public void excuseKeyword(String keyword, String locatorId, String locatorString, String inputValue,
-            String numbersOfInputParam, String numbersOfOutputPram, String inputQuery, String expexted) {
+    public void excuseKeyword(String[] args) {
+        String keyword = args[0].trim();
+        String locatorId = args[1].trim();
+        String locatorString = args[2].trim();
+        String inputValue = args[3].trim();
+        int numbersOfInputParam = Integer.parseInt(args[4]);
+        int numbersOfOutputParam = Integer.parseInt(args[5]);
+        String inputQuery = args[6].trim();
+        String expected = args[7].trim();
         switch (keyword) {
         case "setup_browser":
             setupBrowser(inputValue);
@@ -140,6 +159,15 @@ public class AppTest extends TestCase {
             break;
         case "screen_shot":
             screenShot(inputValue);
+            break;
+        case "wait_time":
+            waitTime(inputValue);
+            break;
+        case "start_loop":
+            int loopTimes = Integer.parseInt(args[8]);
+            int fromLine = Integer.parseInt(args[9]);
+            int toLine = Integer.parseInt(args[10]);
+            startLoop(loopTimes, fromLine, toLine);
             break;
         default:
             break;
@@ -216,8 +244,8 @@ public class AppTest extends TestCase {
             ioe.printStackTrace();
         }
 
-        String[][] keywords = new String[totalRows][MAX];
-        for (int i = 0; i < totalRows; i++) {
+        String[][] keywords = new String[totalRows - 1][MAX];
+        for (int i = 0; i < totalRows - 1; i++) {
             int pos = 0;
             keywords[i][pos++] = arrKeywords[i][keyword];
             keywords[i][pos++] = arrKeywords[i][locatorId];
