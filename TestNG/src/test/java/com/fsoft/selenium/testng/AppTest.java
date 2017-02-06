@@ -14,6 +14,7 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -23,6 +24,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.Select;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -59,6 +61,26 @@ public class AppTest extends TestCase {
 
     public void loadPage(String inputValue) {
         webDriver.get(inputValue);
+    }
+    
+    public void switchFrame(String inputValue) {
+        switch (inputValue) {
+        case "default":
+            webDriver.switchTo().defaultContent();
+            break;
+        case "contentFrame":
+            webDriver.switchTo().parentFrame();
+        default:
+            break;
+        }
+    }
+
+    public void enterInput(WebElement webElement, String inputValue) {
+        webElement.sendKeys(inputValue);
+    }
+    
+    public boolean verify_element_present(){
+        return true;
     }
 
     public WebElement findElement(String locatorId, String locatorString) {
@@ -98,10 +120,6 @@ public class AppTest extends TestCase {
         webElement.click();
     }
 
-    public void enterInput(WebElement webElement, String inputValue) {
-        webElement.sendKeys(inputValue);
-    }
-
     public void dragAndDrop(String locatorId, String locatorString, String inputValue) {
         WebElement fromWebElement1 = findElement(locatorId, locatorString);
         WebElement toWebElement2 = findElement(locatorId, inputValue);
@@ -129,6 +147,25 @@ public class AppTest extends TestCase {
                 excuseKeyword(storeData[j]);
             }
         }
+    }
+    
+    public void deselectDropDown(String locatorId, String locatorString) {
+        Select select = new Select(findElement(locatorId, locatorString));
+        select.deselectAll();
+        //select.deselectByIndex(0);
+    }
+    
+    public void closeDriver() {
+        webDriver.close();
+    }
+    
+    public void quitDriver() {
+        webDriver.quit();
+    }
+    
+    public void sendKey() {
+        Actions builder = new Actions(webDriver);
+        builder.keyDown(Keys.TAB).perform();
     }
 
     @Test(dataProvider = "data")
