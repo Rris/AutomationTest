@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
@@ -62,7 +64,7 @@ public class AppTest extends TestCase {
     public void loadPage(String inputValue) {
         webDriver.get(inputValue);
     }
-    
+
     public void switchFrame(String inputValue) {
         switch (inputValue) {
         case "default":
@@ -75,12 +77,88 @@ public class AppTest extends TestCase {
         }
     }
 
-    public void enterInput(WebElement webElement, String inputValue) {
+    public void enterInput(String locatorId, String locatorString, String inputValue) {
+        WebElement webElement = findElement(locatorId, locatorString);
         webElement.sendKeys(inputValue);
     }
-    
-    public boolean verify_element_present(){
-        return true;
+
+    public boolean verifyElementPresent(String inputValue, String locatorId, String locatorString) {
+        boolean result = false;
+        switch (inputValue.toUpperCase()) {
+        case "TRUE":
+            if (findElement(locatorId, locatorString) != null) {
+                result = true;
+            }
+            break;
+        case "FALSE":
+            if (findElement(locatorId, locatorString) == null) {
+                result = true;
+            }
+        default:
+            break;
+        }
+        return result;
+    }
+
+    public void enterInputHidden(String locatorId, String locatorString, String inputString) {
+        WebElement webElement = findElement(locatorId, locatorString);
+        webElement.sendKeys(inputString);
+    }
+
+    public void selectDropDown(String locatorId, String locatorString, String inputString) {
+        Select select = new Select(findElement(locatorId, locatorString));
+        select.selectByVisibleText(inputString);
+    }
+
+    public int countDropDown(String locatorId, String locatorString) {
+        Select select = new Select(findElement(locatorId, locatorString));
+        List<WebElement> lstWebElement = select.getOptions();
+        return lstWebElement.size();
+    }
+
+    public void clickElement(WebElement webElement) {
+        webElement.click();
+    }
+
+    public boolean verifyText(String locatorId, String locatorString, String inputString) {
+        WebElement webElement = findElement(locatorId, locatorString);
+        String content = webElement.getText();
+        return content.equals(inputString) ? true : false;
+    }
+
+    public boolean verifyTextContains(String locatorId, String locatorString, String inputString) {
+        WebElement webElement = findElement(locatorId, locatorString);
+        String content = webElement.getText();
+        return content.contains(inputString) ? true : false;
+    }
+
+    public boolean verifyFieldText(String locatorId, String locatorString, String inputString) {
+        WebElement webElement = findElement(locatorId, locatorString);
+        String content = webElement.getText();
+        return content.equals(inputString) ? true : false;
+    }
+
+    public boolean compareTwoVar(String inputParam1, String inputParam2) {
+        return inputParam1.equals(inputParam2) ? true : false;
+    }
+
+    public boolean verifyTableCellText(String locatorId, String locatorString, String inputValue, int row, int column) {
+        WebElement webElement = findElement(locatorId,
+                locatorString + "//tr[" + (row + 1) + "]/td[" + (column + 1) + "]");
+        String content = webElement.getText();
+        return content.equals(inputValue) ? true : false;
+    }
+
+    public int tableRowSel(String locatorId, String locatorString, int column, String inputParam) {
+        int result = 0;
+        List<WebElement> rows = findElements(locatorId, locatorString + "//td[" + (column + 1) + "]");
+        for (WebElement row : rows) {
+            result++;
+            if (row.getText().equals(inputParam)) {
+                break;
+            }
+        }
+        return result;
     }
 
     public WebElement findElement(String locatorId, String locatorString) {
@@ -116,8 +194,37 @@ public class AppTest extends TestCase {
         return webElement;
     }
 
-    public void clickElement(WebElement webElement) {
-        webElement.click();
+    public List<WebElement> findElements(String locatorId, String locatorString) {
+        List<WebElement> webElement = null;
+        switch (locatorId) {
+        case "id":
+            webElement = webDriver.findElements(By.id(locatorString));
+            break;
+        case "name":
+            webElement = webDriver.findElements(By.name(locatorString));
+            break;
+        case "className":
+            webElement = webDriver.findElements(By.className(locatorString));
+            break;
+        case "cssSelector":
+            webElement = webDriver.findElements(By.cssSelector(locatorString));
+            break;
+        case "linkText":
+            webElement = webDriver.findElements(By.linkText(locatorString));
+            break;
+        case "partialLinkText":
+            webElement = webDriver.findElements(By.partialLinkText(locatorString));
+            break;
+        case "tagName":
+            webElement = webDriver.findElements(By.tagName(locatorString));
+            break;
+        case "xpath":
+            webElement = webDriver.findElements(By.xpath(locatorString));
+            break;
+        default:
+            break;
+        }
+        return webElement;
     }
 
     public void dragAndDrop(String locatorId, String locatorString, String inputValue) {
@@ -148,21 +255,21 @@ public class AppTest extends TestCase {
             }
         }
     }
-    
+
     public void deselectDropDown(String locatorId, String locatorString) {
         Select select = new Select(findElement(locatorId, locatorString));
         select.deselectAll();
-        //select.deselectByIndex(0);
+        // select.deselectByIndex(0);
     }
-    
+
     public void closeDriver() {
         webDriver.close();
     }
-    
+
     public void quitDriver() {
         webDriver.quit();
     }
-    
+
     public void sendKey() {
         Actions builder = new Actions(webDriver);
         builder.keyDown(Keys.TAB).perform();
@@ -177,7 +284,6 @@ public class AppTest extends TestCase {
         int numbersOfInputParam = Integer.parseInt(args[4]);
         int numbersOfOutputParam = Integer.parseInt(args[5]);
         String inputQuery = args[6].trim();
-        String expected = args[7].trim();
         switch (keyword) {
         case "setup_browser":
             setupBrowser(inputValue);
@@ -189,7 +295,7 @@ public class AppTest extends TestCase {
             clickElement(findElement(locatorId, locatorString));
             break;
         case "enter_input":
-            enterInput(findElement(locatorId, locatorString), inputValue);
+            enterInput(locatorId, locatorString, inputValue);
             break;
         case "drag_and_drop":
             dragAndDrop(locatorId, locatorString, inputValue);
@@ -213,13 +319,39 @@ public class AppTest extends TestCase {
 
     @DataProvider(name = "data")
     public Object[][] prepareData() {
-        Object[][] arrayObject = getDataFromExcelFile("D:/4.1.RITE20_ModuleName_UI_FunctionName_TestCases.xlsx",
-                "TC01_UI");
+        String[][] arrData = getDataFromExcelFile("D:/4.1.RITE20_ModuleName_UI_FunctionName_TestCases.xlsx",
+                "TC01_UI_TS12");
+        Object[][] arrayObject = subDataHandle(arrData);
         return arrayObject;
     }
 
+    @SuppressWarnings("deprecation")
     public String[][] getDataFromExcelFile(String filePath, String sheetName) {
-        String[][] arrKeywords = null;
+        String[][] arrTestCases = null;
+        try {
+            FileInputStream fileInput = new FileInputStream(filePath);
+            XSSFWorkbook workbook = new XSSFWorkbook(fileInput);
+            XSSFSheet sheet = workbook.getSheet(sheetName);
+            int totalRows = sheet.getPhysicalNumberOfRows();
+            int totalColumns = sheet.getRow(0).getPhysicalNumberOfCells();
+            arrTestCases = new String[totalRows][totalColumns];
+            Iterator<Row> rows = sheet.rowIterator();
+            while (rows.hasNext()) {
+                XSSFRow row = (XSSFRow) rows.next();
+                int rowNumber = row.getRowNum();
+                for (int i = 0; i < totalColumns; i++) {
+                    row.getCell(i).setCellType(Cell.CELL_TYPE_STRING);
+                    arrTestCases[rowNumber][i] = row.getCell(i).getStringCellValue();
+                }
+            }
+            workbook.close();
+        } catch (Exception ioe) {
+            ioe.printStackTrace();
+        }
+        return arrTestCases;
+    }
+
+    public String[][] dataHandle(String[][] arrTestCases) {
         int keyword = 0;
         int locatorId = 0;
         int locatorString = 0;
@@ -227,80 +359,68 @@ public class AppTest extends TestCase {
         int numbersOfInputParam = 0;
         int numbersOfOutputParam = 0;
         int inputQuery = 0;
-        int expected = 0;
-        int totalRows = 0;
-        try {
-            FileInputStream fileInput = new FileInputStream(filePath);
-            XSSFWorkbook workbook = new XSSFWorkbook(fileInput);
-            XSSFSheet sheet = workbook.getSheet(sheetName);
-            totalRows = sheet.getPhysicalNumberOfRows();
-            int totalColumns = sheet.getRow(0).getPhysicalNumberOfCells();
-            arrKeywords = new String[totalRows - 1][totalColumns];
-            Iterator<Row> rows = sheet.rowIterator();
-            while (rows.hasNext()) {
-                XSSFRow row = (XSSFRow) rows.next();
-                int rowNumber = row.getRowNum();
-                for (int i = 0; i < totalColumns; i++) {
-                    if (rowNumber == 0) {
-                        switch (row.getCell(i).getStringCellValue()) {
-                        case "Keyword":
-                            keyword = i;
-                            break;
-                        case "Locator Id":
-                            locatorId = i;
-                            break;
-                        case "Locate String":
-                            locatorString = i;
-                            break;
-                        case "Input Value":
-                            inputValue = i;
-                            break;
-                        case "#Input Params":
-                            numbersOfInputParam = i;
-                            break;
-                        case "#Output Params":
-                            numbersOfOutputParam = i;
-                            break;
-                        case "Input Query":
-                            inputQuery = i;
-                            break;
-                        case "Expected":
-                            expected = i;
-                            break;
-                        default:
-                            break;
-                        }
-                    } else {
-                        row.getCell(i).setCellType(Cell.CELL_TYPE_STRING);
-                        arrKeywords[row.getRowNum() - 1][i] = row.getCell(i).getStringCellValue();
-                    }
-                }
+        int totalRow = arrTestCases.length;
+        for (int i = 0; i < arrTestCases[0].length; i++) {
+            switch (arrTestCases[0][i]) {
+            case "Keyword":
+                keyword = i;
+                break;
+            case "Locator Id":
+                locatorId = i;
+                break;
+            case "Locate String":
+                locatorString = i;
+                break;
+            case "Input Value":
+                inputValue = i;
+                break;
+            case "#Input Params":
+                numbersOfInputParam = i;
+                break;
+            case "#Output Params":
+                numbersOfOutputParam = i;
+                break;
+            case "Input Query":
+                inputQuery = i;
+                break;
+            default:
+                break;
             }
-            workbook.close();
-        } catch (Exception ioe) {
-            ioe.printStackTrace();
         }
-
-        String[][] keywords = new String[totalRows - 1][MAX];
-        for (int i = 0; i < totalRows - 1; i++) {
+        String[][] testCases = new String[totalRow - 1][MAX];
+        for (int i = 0; i < totalRow - 1; i++) {
             int pos = 0;
-            keywords[i][pos++] = arrKeywords[i][keyword];
-            keywords[i][pos++] = arrKeywords[i][locatorId];
-            keywords[i][pos++] = arrKeywords[i][locatorString];
-            keywords[i][pos++] = arrKeywords[i][inputValue];
-            keywords[i][pos] = arrKeywords[i][numbersOfInputParam] == "" ? "0" : arrKeywords[i][numbersOfInputParam];
-            int inputParams = Integer.parseInt(keywords[i][pos++]);
-            keywords[i][pos] = arrKeywords[i][numbersOfOutputParam] == "" ? "0" : arrKeywords[i][numbersOfOutputParam];
-            int outputParams = Integer.parseInt(keywords[i][pos++]);
-            keywords[i][pos++] = arrKeywords[i][inputQuery];
-            keywords[i][pos++] = arrKeywords[i][expected];
+            testCases[i][pos++] = arrTestCases[i + 1][keyword];
+            testCases[i][pos++] = arrTestCases[i + 1][locatorId];
+            testCases[i][pos++] = arrTestCases[i + 1][locatorString];
+            testCases[i][pos++] = arrTestCases[i + 1][inputValue];
+            testCases[i][pos] = arrTestCases[i + 1][numbersOfInputParam] == "" ? "0"
+                    : arrTestCases[i + 1][numbersOfInputParam];
+            int inputParams = Integer.parseInt(testCases[i][pos++]);
+            testCases[i][pos] = arrTestCases[i + 1][numbersOfOutputParam] == "" ? "0"
+                    : arrTestCases[i][numbersOfOutputParam];
+            int outputParams = Integer.parseInt(testCases[i][pos++]);
+            testCases[i][pos++] = arrTestCases[i + 1][inputQuery];
             for (int j = 0; j < inputParams; j++) {
-                keywords[i][pos++] = arrKeywords[i][numbersOfInputParam + j + 1];
+                testCases[i][pos++] = arrTestCases[i + 1][numbersOfInputParam + j + 1];
             }
             for (int j = 0; j < outputParams; j++) {
-                keywords[i][pos++] = arrKeywords[i][numbersOfOutputParam + j + 1];
+                testCases[i][pos++] = arrTestCases[i + 1][numbersOfOutputParam + j + 1];
             }
         }
-        return keywords;
+        return arrTestCases;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, String>[][] subDataHandle(String[][] arrData) {
+        int totalRow = arrData.length;
+        int totalColumn = arrData[0].length;
+        Map<String, String>[][] subData = new Map[totalRow][totalColumn];
+        for (int i = 1; i < totalRow; i++) {
+            for (int j = 0; j < totalColumn; j++) {
+                subData[i - 1][j].put(arrData[0][j], arrData[i][j]);
+            }
+        }
+        return subData;
     }
 }
